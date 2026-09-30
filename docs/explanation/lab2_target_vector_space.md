@@ -29,5 +29,11 @@ We validate:
 - linear probe accuracy
 - centroid stability under bootstrap subsampling
 
+![Global genre map: t-SNE of the 160-D target vectors](../media/lab2-genre-map-tsne.png)
+
+t-SNE of the target vectors, coloured by genre. `baroque_classical` and `lofi_hh_lfbb` separate
+cleanly; `hiphop_xtc` and `cc0_other` overlap heavily, which is the `cc0_other` bucket behaving as a
+catch-all rather than as a genre.
+
 See `docs/explanation/results.md` for the achieved values.
 

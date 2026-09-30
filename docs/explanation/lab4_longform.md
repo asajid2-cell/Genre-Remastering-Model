@@ -28,3 +28,8 @@ Practical knobs that reduce warble/static accumulation:
 We record boundary discontinuity metrics (mel MSE and dB proxy) to quantify seam quality across chunks.
 These diagnostics are not a full perceptual metric, but they provide a reliable tuning signal.
 
+![Long-form coherence figure from the 160-second run](../media/longform-coherence.png)
+
+Figure from the 160-second run. The recorded boundary statistics are in
+[`results.md`](results.md).
+
