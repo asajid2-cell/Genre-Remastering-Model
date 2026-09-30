@@ -1,34 +1,26 @@
 # References and Attributions
 
-This project uses several documentation/community templates and organizational patterns.
-This page records attributions and "why we used it" notes.
+Where the documentation structure and templates came from.
 
 ## Documentation structure
 
-- Diataxis (tutorials / how-to / reference / explanation):
-  - Source: https://diataxis.fr/  (Daniele Procida)
-  - Rationale: provides a practical information architecture for technical docs.
+- Diataxis (tutorials / how-to / reference / explanation): https://diataxis.fr/ (Daniele Procida).
+  Gives the information architecture for `docs/`.
 
 ## Documentation templates
 
-- The Good Docs Project (templates and guidance):
-  - Source: https://thegooddocsproject.dev/
-  - Templates (GitHub): https://github.com/thegooddocsproject/templates
-  - Rationale: provides concrete, reusable templates for tutorials, how-to guides, references, and explanations.
-
-## GitHub collaboration templates
-
-- Issue templates and issue forms:
-  - Source: https://docs.github.com/articles/configuring-issue-templates-for-your-repository
-  - Source: https://docs.github.com/communities/using-templates-to-encourage-useful-issues-and-pull-requests/about-issue-and-pull-request-templates
+- The Good Docs Project: https://thegooddocsproject.dev/ and
+  https://github.com/thegooddocsproject/templates. Source of the tutorial, how-to, reference, and
+  explanation page shapes.
 
 ## Decision records
 
-- MADR (Markdown Architectural Decision Records) template:
-  - Source: https://adr.github.io/madr/
-  - Rationale: lightweight, consistent decision-log format for architecture tradeoffs.
+- MADR (Markdown Architectural Decision Records): https://adr.github.io/madr/. Format used in
+  `docs/decisions/`.
 
-## Community health templates
+## Models and data
 
-- Code of Conduct: Contributor Covenant v2.0
-  - Source: https://www.contributor-covenant.org/version/2/0/code_of_conduct/
+- BigVGAN (`nvidia/bigvgan_v2_22khz_80band_256x`) - mel vocoder used by the diffusion branch.
+- EnCodec - waveform codec whose latents the codec track translates.
+- MERT - embedding model behind the style judge.
+- Source corpora and their licences are recorded in the manifest CSVs rather than here.

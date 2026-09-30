@@ -70,7 +70,7 @@ python run_lab3.py --smoke
 
 Notebook runner:
 
-`lab 3/lab3_reconstruction_decoder.ipynb`
+`notebooks/04_lab3_reconstruction_decoder.ipynb`
 
 Full run example:
 

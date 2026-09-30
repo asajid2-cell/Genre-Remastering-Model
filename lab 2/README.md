@@ -15,8 +15,6 @@ generative reconstruction:
 ## What This Folder Contains
 
 - `run_lab2.py`: CLI entry point for Lab 2 pipeline.
-- `lab2_genre_target_vector_space.ipynb`: notebook-first Lab 2 workflow.
-- `PLAN.md`: staged execution plan and success gates.
 - `src/lab2_encoder_bridge.py`: loads frozen Lab 1 checkpoint and performs inference.
 - `src/lab2_data.py`: dataset/manifests and genre-spec materialization.
 - `src/lab2_pipeline.py`: harvesting, centroid building, and validation.
@@ -94,7 +92,7 @@ python run_lab2.py --smoke
 
 Notebook path:
 
-`lab 2/lab2_genre_target_vector_space.ipynb`
+`notebooks/02_lab2_genre_target_vector_space.ipynb`
 
 Full run example:
 
