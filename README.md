@@ -68,7 +68,7 @@ results arrived. Every number here is an automated evaluation.
 | Synthesis (codec) | target-style confidence | ≥ 0.85 | **0.8940** |
 
 Leakage is the content probe's accuracy above the 0.500 chance baseline, and it is the number that
-matters most: it is what separates style from content rather than letting the encoder memorise both.
+matters most: it is what separates style from content rather than letting the encoder memorize both.
 [`docs/reference/metrics.md`](docs/reference/metrics.md) defines the rest, and
 [`docs/explanation/results.md`](docs/explanation/results.md) traces where each number came from.
 
@@ -92,7 +92,7 @@ without the listening test there is no measurement that can tell the two apart.
   reports leakage 0.1083; the same run's preflight reports 0.2125 and fails its own gate. The best
   codec run also writes a 0.4 style threshold, the script default, where the design target is 0.85.
   Both achieved values clear the design targets, so no claim rests on either file, but they are in
-  the repository. [`docs/explanation/results.md`](docs/explanation/results.md) itemises them.
+  the repository. [`docs/explanation/results.md`](docs/explanation/results.md) itemizes them.
 
 ## Reproduction
 

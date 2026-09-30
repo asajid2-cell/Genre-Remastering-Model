@@ -1,7 +1,8 @@
 # Examples
 
-Ten 5-second clips, committed so the project can be heard without running anything, and playable on
-the [demo page](https://asajid2-cell.github.io/Genre-Remastering-Model/).
+Ten clips, committed so the project can be heard without running anything, and playable on the
+[demo page](https://asajid2-cell.github.io/Genre-Remastering-Model/). The codec transfers are 5.0 s
+and the diffusion samples are 2.97 s.
 
 | Track | Clips | Producing run |
 |---|---|---|
