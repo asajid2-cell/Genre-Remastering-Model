@@ -1,199 +1,67 @@
-# Lab 3 - Reconstruction Decoder (Analysis -> Synthesis)
+# Lab 3 - Synthesis
 
-Lab 3 turns the frozen analysis stack into a generative synthesis stack.
+Lab 3 turns the analysis stack into a generative one. Both tracks take Lab 1's 128-D `z_content`
+plus a Lab 2 target vector, and both are scored on melodic preservation, target-style confidence,
+and spectral continuity.
 
-## Objective
+| Track | What it does | Entry point |
+|---|---|---|
+| Codec-latent transfer | Translates frozen EnCodec latents and decodes straight to waveform | `lab 3/run_lab3_codec.py` |
+| Diffusion | Generates log-mel with v-prediction (UNet, EMA, CFG dropout) and vocodes with BigVGAN | `lab 3/run_lab3_diffusion_v2.py` |
 
-Build a conditional Reconstruction Decoder that takes:
+A third path, `lab 3/run_lab3.py`, reconstructs log-mel directly in two stages - self-reconstruction,
+then genre shift. It came first and does not carry the reported numbers.
 
-- `z_content` (Lab 1 structural skeleton, 128-D)
-- `V_target` (Lab 2 genre target vector)
-
-and synthesizes a Log-Mel spectrogram that preserves melody while shifting style.
-
-## Two-Stage Training
-
-1. Stage 1 - Self-Reconstruction Baseline
-- Condition on the sample's own genre target vector.
-- Reconstruct the original Log-Mel target.
-- Validates decoder capacity and conditioning path.
-
-2. Stage 2 - Genre-Shift Synthesis
-- Condition on a different genre target vector.
-- Supports conditioning modes: `centroid`, `exemplar`, `mix` (default `mix`).
-- Preserve `z_content` while steering style toward target genre.
-- Uses content/style consistency + adversarial + spectral continuity regularization.
-
-## Data Generalization Controls
-
-- Multi-chunk sampling per track during cache build:
-  - `--chunks-per-track` (default `4`)
-  - `--chunk-sampling` (`uniform` or `random`)
-  - `--min-start-sec`, `--max-start-sec`
-- Grouped split to avoid track leakage:
-  - `--split-by-track` (default on)
-  - uses `track_id` in cache index to ensure train/val track disjointness.
-
-## Exit Metrics
-
-- `MPS` (Melodic Preservation Score): cosine(`z_content`, `z_content'`) >= `0.90`
-- `SF` (Stylistic Fidelity): classifier confidence in target genre >= `0.85`
-- `Spectral Continuity`: multi-resolution STFT continuity score reported (lower is better)
-
-## Save/Resume
-
-Run artifacts are written to:
-
-`../saves2/lab3_synthesis/runN/`
-
-with:
-
-- `run_state.json`
-- `checkpoints/stage1_latest.pt`
-- `checkpoints/stage2_latest.pt`
-- `history.csv`
-- `lab3_exit_audit.json`
-
-Resume by passing `--mode resume --resume-dir <run_dir>`.
-
-By default, strict run naming is enforced (`run1`, `run2`, ...), and each completed run
-auto-exports a standardized post-train sample pack to:
-
-`../saves2/lab3_synthesis/runN/samples/posttrain_samples/`
-
-## Quick Start
+## Quick start
 
 ```powershell
-cd "lab 3"
-python run_lab3.py --smoke
+python "lab 3/run_lab3_codec.py" --smoke
+python "lab 3/run_lab3.py" --smoke
 ```
 
-Notebook runner:
+## Exit gates
 
-`notebooks/04_lab3_reconstruction_decoder.ipynb`
+- `MPS` (melodic preservation): cosine(`z_content`, `z_content'`) >= 0.90
+- `SF` (stylistic fidelity): judge confidence in the target genre >= 0.85
+- Spectral continuity: multi-resolution STFT score, lower is better
 
-Full run example:
+What each one means is in `docs/reference/metrics.md`; the values reached, and the artifacts behind
+them, are in `docs/explanation/results.md`.
+
+## Genre labels are dataset labels
+
+Every public corpus in this project couples genre to dataset source, so a model can learn one
+source's recording chain instead of a transferable style. Without new data, the countermeasure is to
+keep each label bucket multi-source and balanced:
 
 ```powershell
-cd "lab 3"
-python run_lab3.py `
-  --per-genre-samples 800 `
-  --stage1-epochs 20 `
-  --stage2-epochs 20
+python "lab 3/run_lab3_codec.py" `
+  --genre-schema binary_acoustic_beats `
+  --balance-sources-within-genre `
+  --require-min-sources-per-genre 2 `
+  --require-is-music
 ```
 
-## Codec-Latent Transfer Track (Fresh Architecture)
+`scripts/run_codec_strong_schema_smoke.ps1` and `run_codec_strong_schema_full.ps1` wrap cache build,
+style bank, training, and audit into one command; `scripts/run_codec_audit_latest.ps1` audits the
+latest run for leakage.
 
-This track replaces mel-target generation with frozen EnCodec latents and waveform decoding:
+For labels that are not source buckets at all, two unpaired options are provided: CLAP zero-shot
+prompts (`lab 3/run_lab3_auto_genre.py`) and Lab 2-style clustering of `[z_style, descriptor32]`
+(`lab 3/run_lab3_auto_genre_lab2cluster.py`).
 
-- source waveform -> frozen EnCodec encoder -> quantized latent embedding
-- translator conditions on `z_content` (Lab1) + target style exemplars
-- frozen EnCodec decoder outputs waveform (no Griffin-Lim in training path)
+## Run artifacts
 
-Entry point:
+Runs land in `saves2/lab3_synthesis/runN/`, with strict run naming by default: `run_state.json`,
+`history.csv`, `checkpoints/`, `lab3_exit_audit.json`, and a `samples/posttrain_samples/` pack
+exported on completion. Resume with `--mode resume --resume-dir <run_dir>`.
 
-```powershell
-cd "lab 3"
-python run_lab3_codec.py --smoke
-```
+To audition the exports by hand, `lab 3/run_lab3_clip_picker.py` gives an accept/reject pass over
+them (`a`, `r`, `s`, `o`, `q`).
 
-## Strong Schema (Unpaired-Validity Runs)
+## Reading more
 
-If your "genre" labels are coupled to dataset source (common in this project), the model and/or judge can learn
-source fingerprints instead of transferable style. The strongest fix you can do *without new data* is to:
-
-- remap labels into multi-source buckets (`--genre-schema binary_acoustic_beats`)
-- balance sources within each bucket (`--balance-sources-within-genre`)
-- require each bucket to have >=2 sources (`--require-min-sources-per-genre 2`)
-- optionally filter to music-only (`--require-is-music`)
-
-Helpers (recommended):
-
-```powershell
-# quick sanity run (cache + judge + style bank + tiny training)
-./scripts/run_codec_strong_schema_smoke.ps1
-
-# full strong-schema run
-./scripts/run_codec_strong_schema_full.ps1
-
-# audit the latest run for source leakage
-./scripts/run_codec_audit_latest.ps1
-```
-
-## Auto-Genre (Unpaired Labeling)
-
-If you want "genres" that are not just dataset-source buckets, you need labels derived from audio content.
-Two unpaired options are provided:
-
-1. CLAP zero-shot prompts (semantic, external model):
-
-```powershell
-cd "lab 3"
-python run_lab3_auto_genre.py --manifests-root "%DGGR_MANIFESTS_ROOT%" --out-csv "auto_genre_4way.csv" --labels hiphop lofi classical electronic
-```
-
-End-to-end helper (CLAP label + train + audit):
-
-```powershell
-powershell -ExecutionPolicy Bypass -File scripts/run_codec_clap_labels_full.ps1
-```
-
-2. Lab2-style clustering (internal, no text model):
-Clusters `target160 = [z_style, descriptor32]` into `K` style buckets and writes `genre=cluster_i`.
-
-```powershell
-cd "lab 3"
-python run_lab3_auto_genre_lab2cluster.py --manifests-root "%DGGR_MANIFESTS_ROOT%" --out-csv "auto_cluster_k4.csv" --n-clusters 4
-```
-
-Recommended fresh 3-run sequence:
-
-```powershell
-cd "lab 3"
-
-# run1: identity-only sanity (stage1 focus)
-python run_lab3_codec.py `
-  --run-name run1 `
-  --stage1-epochs 8 `
-  --stage2-epochs 0 `
-  --stage3-epochs 0
-
-# run2: cross-style transfer
-python run_lab3_codec.py `
-  --run-name run2 `
-  --stage1-epochs 8 `
-  --stage2-epochs 16 `
-  --stage3-epochs 0
-
-# run3: transfer + diversity pressure
-python run_lab3_codec.py `
-  --run-name run3 `
-  --stage1-epochs 8 `
-  --stage2-epochs 16 `
-  --stage3-epochs 8 `
-  --stage3-style-dropout-p 0.25 `
-  --mode-seeking-weight 1.0
-```
-
-## Fast Manual Clip Triage
-
-Use the interactive picker to quickly audition random clips and accept/reject them into lists:
-
-```powershell
-cd "lab 3"
-python run_lab3_clip_picker.py `
-  --input-csv "../saves2/lab3_synthesis/run20/samples/posttrain_samples/generation_summary.csv" `
-  --path-col fake_wav `
-  --base-dir ".." `
-  --session-name run20_fake_triage `
-  --max-clips 200 `
-  --auto-open
-```
-
-Controls:
-
-- `a` accept
-- `r` reject
-- `s` skip
-- `o` reopen/replay
-- `q` quit
+- Design: `docs/explanation/lab3_codec_transfer.md`, `docs/explanation/lab3_diffusion.md`
+- Flags: `docs/reference/cli.md` · Metrics: `docs/reference/metrics.md`
+- Best-checkpoint recipes: `docs/howto/reproduce_best_runs.md`
+- Final report: `DGGR-final-report.pdf`
