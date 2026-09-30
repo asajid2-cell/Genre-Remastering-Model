@@ -135,4 +135,5 @@ itemises the provenance of each number.
 
 Built for CMPUT 414 at the University of Alberta, Winter 2026, in a group of three. The code, this
 repository, and the audits are mine; the report and the proposal are co-authored with Sahara Kaul
-and Kelsey Pattison. [MIT](LICENSE) covers the code and documentation, not the two co-authored PDFs.
+and Kelsey Pattison. [MIT](LICENSE) covers the code and documentation; the two co-authored PDFs are carved out in
+[`NOTICE`](NOTICE).
