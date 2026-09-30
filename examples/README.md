@@ -1,19 +1,15 @@
 # Examples
 
-This folder contains **small, curated outputs** that are safe to commit and useful for quick qualitative sanity checks.
+Seven generated clips, committed so the project can be heard without running anything: three codec
+transfers and four diffusion samples.
 
-What is included:
-- short generated `.wav` clips (no large checkpoints)
-- metadata describing the producing run/checkpoint
+| Track | Clips | Producing run |
+|---|---|---|
+| Codec transfer | `audio/codec_run1055_sample000*_src*_tgt*.wav` | `saves2/lab3_codec_transfer/run1055` |
+| Diffusion V2, epoch 6 | `audio/diffusion_v2_run_d002_epoch006_0*.wav` | `saves2/lab3_diffusion/run_d002` |
 
-What is not included:
-- training datasets
-- large caches (`saves/`, `saves2/`)
-- large model checkpoints (GitHub size limits). For checkpoints, see `docs/howto/reproduce_best_runs.md`.
+[`metadata.md`](metadata.md) records the model family behind each clip, the run it came from, and the
+`srcX_tgtY` genre-index convention.
 
-## Audio
-
-`examples/audio/` includes:
-- diffusion mel-generation samples (generated clips only; no ground-truth clips)
-- codec-latent transfer samples (translated clips only; source clips are not included)
-
+No source audio, training corpora, or checkpoints are included. The recipes that reproduce each
+checkpoint are in [`docs/howto/reproduce_best_runs.md`](../docs/howto/reproduce_best_runs.md).
