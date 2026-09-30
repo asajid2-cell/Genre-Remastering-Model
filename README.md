@@ -1,85 +1,133 @@
 # Deep Generative Genre Remastering (DGGR)
 
-An audio research project investigating genre transfer while preserving a track's melodic content, using codec-latent translation and diffusion.
+**A four-stage audio pipeline that separates a track into a content vector and a style vector, then
+rebuilds it in a target genre. Every stage is graded against thresholds that were written into the
+project proposal before any model was trained.**
 
-[Listen to samples](examples/README.md) · [Final report (15 pages)](DGGR-final-report.pdf) · [Project proposal](DGGR-proposal.pdf)
+**[Listen to the remasters](https://asajid2-cell.github.io/Genre-Remastering-Model/)** — five-second
+source/remaster pairs and diffusion samples, playable in the browser.
+[Final report, 15 pp](DGGR-final-report.pdf) ·
+[Proposal, where the targets are fixed](DGGR-proposal.pdf)
+
+![An input spectrogram beside its remaster](docs/media/codec-transfer-spectrogram.png)
+
+*Input from the `cc0_other` bucket on the left, the codec track's remaster of it into
+`baroque_classical` on the right. From the [final report](DGGR-final-report.pdf).*
 
 ## Samples
 
-Seven output clips are included; no training or source audio is distributed, so these are not paired listening comparisons.
+Ten clips live in [`examples/audio/`](examples/audio) and play on the
+[demo page](https://asajid2-cell.github.io/Genre-Remastering-Model/): eight remasters and the two CC0
+inputs they were made from. Two remasters ship with their input, so the change is audible rather than
+asserted:
 
-| Model | Outputs | Producing run |
-|---|---|---|
-| EnCodec latent translation | [Other → lo-fi](examples/audio/codec_run1055_sample0000_src1_tgt3.wav) · [Hip-hop → other](examples/audio/codec_run1055_sample0004_src2_tgt1.wav) · [Lo-fi → baroque](examples/audio/codec_run1055_sample0008_src3_tgt0.wav) | `run1055` |
-| Diffusion V2 + BigVGAN | [Sample 1](examples/audio/diffusion_v2_run_d002_epoch006_00_gen.wav) · [Sample 2](examples/audio/diffusion_v2_run_d002_epoch006_01_gen.wav) · [Sample 3](examples/audio/diffusion_v2_run_d002_epoch006_02_gen.wav) · [Sample 4](examples/audio/diffusion_v2_run_d002_epoch006_03_gen.wav) | `run_d002`, epoch 6 |
+- a CC0 field recording remastered into `lofi_hh_lfbb`
+- a CC0 chiptune track remastered into `hiphop_xtc`
 
-[Sample metadata](examples/metadata.md) records model provenance and genre indices.
-
-![Input and codec-transfer output spectrograms](docs/media/codec-transfer-spectrogram.png)
-
-*An input from the `cc0_other` bucket (left) and its codec remaster into `baroque_classical` (right), reproduced from the final report.*
+The other six are outputs alone. Their inputs come from a commercial sample pack and from research
+corpora this repository does not redistribute. [`examples/metadata.md`](examples/metadata.md) records
+the run behind each clip.
 
 ## Method
 
-The pipeline has four stages:
+Four stages, each consuming the one above.
 
-1. **Deconstruction:** encode audio into separate 128-D content and style vectors, with an adversarial style probe and a music/non-music gate.
-2. **Target space:** combine style vectors with 32 handcrafted descriptors to form 160-D genre targets.
-3. **Synthesis:** translate frozen EnCodec latents to waveform, or generate log-mel spectrograms with v-prediction diffusion and vocode them with BigVGAN.
-4. **Long-form processing:** remaster overlapping chunks with SDEdit-style diffusion, prefix locking, and periodic re-anchoring.
+1. **Deconstruction.** An encoder splits audio into a 128-D content vector and a 128-D style vector
+   under an adversarial style probe, with a music/non-music gate.
+2. **Target space.** Style vectors from four corpora are concatenated with 32 handcrafted descriptors
+   into a 160-D target vector; per-genre centroids become the conditioning signal.
+3. **Synthesis.** A codec track translates frozen EnCodec latents straight to waveform; a diffusion
+   track generates log-mel with v-prediction and vocodes it with BigVGAN.
+4. **Long-form.** Chunked SDEdit-style remastering of a whole track, with prefix-overlap locking and
+   periodic re-anchoring.
+
+The [final report](DGGR-final-report.pdf) carries the architecture, and
+[`docs/explanation/`](docs/explanation) has a page per stage.
 
 ### Dataset confounding
 
-Genre labels are correlated with dataset source: hip-hop, lo-fi, and baroque examples come from different collections. A style classifier can therefore reward recording characteristics rather than musical genre. The pipeline uses track-grouped splits, balanced sampling, and source-leakage audits to investigate this confound. The effect of the corrective measures on transfer quality has not been established.
-
-The [final report](DGGR-final-report.pdf) describes the architecture and experiments; [Lab 2](lab%202/README.md) and [Lab 3](lab%203/README.md) document the target-space and synthesis paths.
+Genre and dataset source are the same variable here. XTC hip-hop, FMA lo-fi and PD-symbolic baroque
+arrive from different collections, so a model that appears to transfer style may be learning one
+collection's recording chain instead. The pipeline answers with track-ID-grouped splits, multi-source
+genre buckets, a leakage audit that re-derives labels from the audio rather than trusting the corpus,
+and a style judge built on MERT embeddings. How much of the gap that closes is not settled, and the
+audits disagree with each other; see Limitations.
 
 ## Results
 
-The [proposal](DGGR-proposal.pdf) records these targets before training. These are automated evaluations, not listening-test results.
+Targets were fixed in the [proposal](DGGR-proposal.pdf) on 2026-02-10 and did not move when the
+results arrived. Every number here is an automated evaluation.
 
-| Stage | Metric | Target | Reported result |
+| Stage | Metric | Target | Achieved |
 |---|---|---|---|
-| Deconstruction | Style-probe accuracy | ≥ 0.85 | 0.9417 |
-| Deconstruction | Content leakage above chance | ≤ 0.15 | 0.1083* |
-| Deconstruction | Music-gate ROC-AUC | ≥ 0.90 | 0.9299 |
-| Target space | Silhouette (cosine) | ≥ 0.45 | 0.4939 |
-| Synthesis (codec) | Melodic preservation score | ≥ 0.90 | 0.9565 |
-| Synthesis (codec) | Target-style confidence | ≥ 0.85 | 0.8940 |
+| Deconstruction | style-probe accuracy | ≥ 0.85 | **0.9417** |
+| Deconstruction | content leakage above chance | ≤ 0.15 | **0.1083** |
+| Deconstruction | music-gate ROC-AUC | ≥ 0.90 | **0.9299** |
+| Target space | silhouette (cosine) | ≥ 0.45 | **0.4939** |
+| Synthesis (codec) | melodic preservation | ≥ 0.90 | **0.9565** |
+| Synthesis (codec) | target-style confidence | ≥ 0.85 | **0.8940** |
 
-*Content leakage is probe accuracy above the 0.500 chance baseline. The selected audit reports 0.1083; the same run's preflight reports 0.2125, which fails the target. These measurements do not establish complete content/style disentanglement.*
-
-[Metric definitions and run provenance](docs/explanation/results.md) detail the evaluations and artifact discrepancies. The codec run also records a script-default style threshold of 0.4 rather than the proposal's 0.85; its achieved confidence of 0.8940 clears both.
+Leakage is the content probe's accuracy above the 0.500 chance baseline, and it is the number that
+matters most: it is what separates style from content rather than letting the encoder memorise both.
+[`docs/reference/metrics.md`](docs/reference/metrics.md) defines the rest, and
+[`docs/explanation/results.md`](docs/explanation/results.md) traces where each number came from.
 
 ## Limitations
 
-- **No perceptual validation:** the proposed blind A/B listening study and Fréchet Audio Distance evaluation were not run. Classifier scores do not establish that listeners perceive the target genre.
-- **Dataset-source confounding remains unresolved:** leakage audits investigate it, but the project's results do not demonstrate that it has been eliminated.
-- **Long-form output accumulates warble:** a 160-second run across 64 chunks reports mean boundary mel MSE of 0.0018347 and discontinuity of 2.87 dB. These boundary measurements do not establish perceptual stability. `--t-start`, `--source-mel-blend`, and `--reanchor-every` control the edit/stability tradeoff.
-- **Lower diffusion loss did not track informal listening judgments:** validation loss fell from 0.0442 at epoch 6 to 0.0386 at epoch 18, but epoch 6 was selected for perceived quality without a controlled listening study.
+**The perceptual leg was designed and never run.** The proposal's Lab 5, a blind A/B listening test
+plus Fréchet Audio Distance, is the only stage that measures whether a remaster sounds like its
+target to a person. Every quality claim above therefore rests on a trained classifier and spectral
+diagnostics, and the report's Threats to Validity says the same thing.
+
+That distinction has a price. On the diffusion track, validation loss keeps falling to 0.0386 at
+epoch 18, while the checkpoint kept is epoch 6, at 0.0442. Lower loss was not better audio, and
+without the listening test there is no measurement that can tell the two apart.
+
+![Training and validation loss over 18 epochs](docs/media/diffusion-loss-curve.png)
+
+- **Long-form drifts past ~160 s.** Boundary statistics are clean over 64 chunks (mean mel MSE
+  0.0018347, 2.87 dB mean discontinuity), but what accumulates is warble, not seams. `--t-start`,
+  `--source-mel-blend` and `--reanchor-every` trade edit freedom for stability.
+- **Two artifacts disagree with the numbers printed beside them.** The selected deconstruction audit
+  reports leakage 0.1083; the same run's preflight reports 0.2125 and fails its own gate. The best
+  codec run also writes a 0.4 style threshold, the script default, where the design target is 0.85.
+  Both achieved values clear the design targets, so no claim rests on either file, but they are in
+  the repository. [`docs/explanation/results.md`](docs/explanation/results.md) itemises them.
 
 ## Reproduction
 
-**Checkpoints and training corpora are not distributed.** Running inference requires a compatible trained checkpoint; reproducing training also requires the datasets and manifests. This is not a ready-to-run pretrained demo.
+**No checkpoints and no corpora ship with this repository.** It is the code, the report and the
+sample clips, not a runnable pretrained demo. Inference needs a compatible checkpoint; retraining
+needs the datasets and their manifest CSVs.
 
-- [Installation and environment setup](docs/howto/01_environment_setup.md)
-- [Recipes for the reported codec, diffusion, and long-form runs](docs/howto/reproduce_best_runs.md)
-- [Command-line reference](docs/reference/cli.md)
+```bash
+python -m pip install -r requirements.txt
+cp .env.example .env      # set DGGR_DATA_ROOT and DGGR_MANIFESTS_ROOT
+```
+
+From there: [`docs/howto/01_environment_setup.md`](docs/howto/01_environment_setup.md) for the
+environment, [`docs/howto/reproduce_best_runs.md`](docs/howto/reproduce_best_runs.md) for the recipes
+that produced each reported checkpoint, and [`docs/reference/cli.md`](docs/reference/cli.md) for the
+entry points.
 
 ## Code
 
-| Area | Entry point |
+| Area | Path |
 |---|---|
-| Deconstruction encoder | [`notebooks/01_lab1_deconstruction_encoder.ipynb`](notebooks/01_lab1_deconstruction_encoder.ipynb) |
-| Target-vector space | [`dggr/lab2_pipeline.py`](dggr/lab2_pipeline.py) |
-| Codec-latent transfer | [`dggr/lab3_codec_train.py`](dggr/lab3_codec_train.py) |
-| Style judge and metrics | [`dggr/lab3_codec_judge.py`](dggr/lab3_codec_judge.py) |
-| Diffusion synthesis | [`dggr/lab3_diffusion_train.py`](dggr/lab3_diffusion_train.py) |
-| Long-form processing | [`lab 3/run_lab4_longform_coherence.py`](lab%203/run_lab4_longform_coherence.py) |
-| Source-leakage audit | [`lab 3/run_lab3_quality_audit.py`](lab%203/run_lab3_quality_audit.py) |
+| Deconstruction encoder | `notebooks/01_lab1_deconstruction_encoder.ipynb` |
+| Target-vector space | `dggr/lab2_pipeline.py` |
+| Codec-latent transfer | `dggr/lab3_codec_train.py`, `lab 3/run_lab3_codec.py` |
+| Style judge and metrics | `dggr/lab3_codec_judge.py` |
+| Diffusion branch | `dggr/lab3_diffusion_train.py` |
+| Long-form coherence | `lab 3/run_lab4_longform_coherence.py` |
+| Source-leakage audit | `lab 3/run_lab3_quality_audit.py` |
 
-## Authors and license
+`dggr/` is the canonical package. `lab 2/src/` and `lab 3/src/` hold one-line re-export shims so the
+original run scripts' imports keep working.
 
-Built for CMPUT 414 at the University of Alberta, Winter 2026, in a group of three. Code and audits are by Ahmed Sajid; the report and proposal are co-authored with Sahara Kaul and Kelsey Pattison.
+## Authors and licence
 
-[MIT](LICENSE) covers the code and documentation. The two co-authored PDFs are excluded from that grant; see [NOTICE](NOTICE).
+Built for CMPUT 414 at the University of Alberta, Winter 2026, in a group of three. The code, this
+repository and the audits are mine; the report and the proposal are co-authored with Sahara Kaul and
+Kelsey Pattison. [MIT](LICENSE) covers the code and documentation, and the two co-authored PDFs are
+carved out in [`NOTICE`](NOTICE).

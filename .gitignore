@@ -59,3 +59,4 @@ lab 3.6/outputs/
 *.pt
 *.npz
 *.wav
+!examples/audio/*.wav
