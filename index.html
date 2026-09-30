@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Deep Generative Genre Remastering — listen</title>
+<style>
+  :root { color-scheme: light dark; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0 auto; padding: 2.5rem 1.25rem 4rem; max-width: 48rem;
+    font: 16px/1.65 ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  h1 { font-size: 1.45rem; line-height: 1.25; margin: 0 0 .6rem; }
+  h2 { font-size: 1rem; letter-spacing: .01em; margin: 2.75rem 0 .9rem;
+       padding-bottom: .45rem; border-bottom: 1px solid; border-color: color-mix(in srgb, currentColor 18%, transparent); }
+  .lede { margin: 0 0 .5rem; }
+  .note { margin: 0; font-size: .87rem; opacity: .72; }
+  .clip { border: 1px solid; border-color: color-mix(in srgb, currentColor 16%, transparent);
+          border-radius: .55rem; padding: 1rem 1rem .8rem; margin: 0 0 1rem; }
+  .clip h3 { font-size: .95rem; margin: 0 0 .7rem; }
+  .clip.unpaired { border-style: dashed; }
+  .row { display: flex; align-items: center; gap: .8rem; margin-bottom: .45rem; }
+  .row:last-of-type { margin-bottom: 0; }
+  .row b { flex: 0 0 5rem; font-size: .72rem; font-weight: 600; text-transform: uppercase;
+           letter-spacing: .06em; opacity: .6; }
+  audio { flex: 1 1 auto; height: 2.25rem; min-width: 0; }
+  .meta { font-size: .82rem; margin: .7rem 0 0; opacity: .72; }
+  footer { margin-top: 3.25rem; padding-top: 1rem; font-size: .85rem; opacity: .75;
+           border-top: 1px solid; border-color: color-mix(in srgb, currentColor 18%, transparent); }
+  a { color: inherit; }
+</style>
+</head>
+<body>
+
+<h1>Deep Generative Genre Remastering</h1>
+<p class="lede">Five-second clips from the EnCodec-latent transfer track and the diffusion track.</p>
+<p class="note">Where the input is CC0, the input and its remaster are both included, so you can hear
+what the model changed. The rest are outputs only, because their inputs are commercial sample-pack or
+dataset audio that this repository does not redistribute.</p>
+
+<h2>Source &rarr; remaster</h2>
+
+<div class="clip">
+  <h3>CC0 field recording &rarr; lo-fi</h3>
+  <div class="row"><b>Input</b><audio controls preload="none" src="audio/codec_run1055_sample0000_source.wav"></audio></div>
+  <div class="row"><b>Remaster</b><audio controls preload="none" src="audio/codec_run1055_sample0000_src1_tgt3.wav"></audio></div>
+  <p class="meta">Input: an atmospheric field recording, <span>493858__bashrambali__atmo-antigua_semana-santa</span>, released CC0 on Freesound. Target genre <span>lofi_hh_lfbb</span>.</p>
+</div>
+
+<div class="clip">
+  <h3>CC0 chiptune track &rarr; hip-hop</h3>
+  <div class="row"><b>Input</b><audio controls preload="none" src="audio/codec_run1055_sample0018_source.wav"></audio></div>
+  <div class="row"><b>Remaster</b><audio controls preload="none" src="audio/codec_run1055_sample0018_src1_tgt2.wav"></audio></div>
+  <p class="meta">Input: <span>Level 9 — One More Step Till the Fall of Patriarchy</span> by Komiku, released CC0. Target genre <span>hiphop_xtc</span>.</p>
+</div>
+
+<h2>Remaster only</h2>
+<p class="note">Same codec track. The inputs are not included, so these show the target genre without a
+reference to compare against.</p>
+
+<div class="clip unpaired">
+  <h3>Hip-hop sample &rarr; other</h3>
+  <div class="row"><b>Remaster</b><audio controls preload="none" src="audio/codec_run1055_sample0004_src2_tgt1.wav"></audio></div>
+  <p class="meta">Input from the XTc Files of Hip Hop sample library. Target genre <span>cc0_other</span>.</p>
+</div>
+
+<div class="clip unpaired">
+  <h3>Lo-fi beat &rarr; baroque classical</h3>
+  <div class="row"><b>Remaster</b><audio controls preload="none" src="audio/codec_run1055_sample0008_src3_tgt0.wav"></audio></div>
+  <p class="meta">Input from the project's lo-fi beat corpus. Target genre <span>baroque_classical</span>.</p>
+</div>
+
+<h2>Diffusion samples</h2>
+<p class="note">The diffusion track at epoch 6, the checkpoint kept for perceived quality. Validation
+loss keeps falling past this epoch, but the audio did not improve with it. These are generated
+outputs; the reference clips for this run are not redistributed.</p>
+
+<div class="clip unpaired">
+  <h3>Diffusion &rarr; hip-hop, epoch 6</h3>
+  <div class="row"><b>Sample 1</b><audio controls preload="none" src="audio/diffusion_v2_run_d002_epoch006_00_gen.wav"></audio></div>
+  <div class="row"><b>Sample 2</b><audio controls preload="none" src="audio/diffusion_v2_run_d002_epoch006_01_gen.wav"></audio></div>
+  <div class="row"><b>Sample 3</b><audio controls preload="none" src="audio/diffusion_v2_run_d002_epoch006_02_gen.wav"></audio></div>
+  <div class="row"><b>Sample 4</b><audio controls preload="none" src="audio/diffusion_v2_run_d002_epoch006_03_gen.wav"></audio></div>
+  <p class="meta">Run <span>run_d002</span>. Target genre <span>hiphop_xtc</span>. Vocoded with BigVGAN.</p>
+</div>
+
+<footer>
+  <p>Source: <a href="https://github.com/asajid2-cell/Genre-Remastering-Model">asajid2-cell/Genre-Remastering-Model</a>
+  &middot; <a href="https://github.com/asajid2-cell/Genre-Remastering-Model/blob/master/DGGR-final-report.pdf">final report</a>
+  &middot; <a href="https://github.com/asajid2-cell/Genre-Remastering-Model/blob/master/DGGR-proposal.pdf">proposal</a></p>
+  <p>Code and documentation are MIT licensed. The two PDFs are co-authored course deliverables and are
+  excluded from that grant.</p>
+</footer>
+
+</body>
+</html>
